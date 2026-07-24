@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GreenTuber VIP Auto Load</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root { --gt-green: #22c55e; --gt-bg: #0f0f0f; --gt-sub: #aaaaaa; }
+    body { background-color: var(--gt-bg); color: #f1f1f1; font-family: system-ui, sans-serif; margin: 0; padding-bottom: 60px; user-select: none; }
+    .accent-green { color: var(--gt-green); }
+    .bg-accent-green { background-color: var(--gt-green); }
+    
+    #bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--gt-bg); border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--gt-sub); font-size: 10px; cursor: pointer; width: 20%; }
+    .nav-item i { font-size: 18px; margin-bottom: 2px; }
+    .nav-item.active { color: var(--gt-green); }
+
+    #player-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--gt-bg); z-index: 200; display: none; flex-direction: column; overflow-y: auto; }
+    .action-btn { display: flex; flex-direction: column; align-items: center; color: #fff; font-size: 11px; gap: 5px; cursor: pointer; }
+    .pip-mode { position: fixed !important; bottom: 70px !important; right: 10px !important; width: 220px !important; height: auto !important; z-index: 300 !important; border-radius: 8px; overflow: hidden; border: 2px solid var(--gt-green); }
+    .pip-mode #player-info-container { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="sticky top-0 bg-[#0f0f0f] z-50 p-4 border-b border-[#222] flex items-center justify-between">
+    <div class="flex items-center gap-1 cursor-pointer" onclick="switchTab('home')">
+      <span class="text-xl font-bold text-white"><span class="accent-green">Green</span>Tuber <span class="accent-green text-xs bg-green-950/80 px-1.5 py-0.5 rounded">VIP</span></span>
+    </div>
+    <div class="flex items-center gap-4 text-white">
+      <i class="fa-solid fa-arrows-rotate text-sm cursor-pointer accent-green" title="Đổi máy chủ API" onclick="findWorkingServer(true)"></i>
+      <i class="fa-solid fa-magnifying-glass text-lg cursor-pointer" onclick="toggleSearch()"></i>
+      <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-7 h-7 rounded-full border border-slate-700">
+    </div>
+  </header>
+
+  <!-- Search Bar -->
+  <form id="search-form" class="hidden p-3 bg-[#181818] border-b border-[#222] flex">
+    <input type="text" id="search-input" placeholder="Tìm kiếm nội dung trên YouTube..." class="w-full px-3 py-1.5 bg-[#222] text-white text-sm rounded-l focus:outline-none">
+    <button type="submit" class="bg-accent-green text-black px-4 font-bold rounded-r"><i class="fa-solid fa-magnifying-glass"></i></button>
+  </form>
+
+  <!-- Dynamic Content Area -->
+  <main id="main-content" class="p-0 min-h-[80vh]"></main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i class="fa-solid fa-house"></i><span>Trang chủ</span></div>
+    <div class="nav-item" id="nav-shorts" onclick="switchTab('shorts')"><i class="fa-solid fa-bolt"></i><span>Shorts</span></div>
+    <div class="nav-item" id="nav-music" onclick="switchTab('music')"><i class="fa-solid fa-circle-play"></i><span>Music</span></div>
+    <div class="nav-item" id="nav-library" onclick="switchTab('library')"><i class="fa-solid fa-folder-plus"></i><span>Thư viện</span></div>
+  </nav>
+
+  <!-- Player Screen -->
+  <div id="player-view">
+    <div class="p-3 bg-black flex items-center justify-between">
+      <i class="fa-solid fa-chevron-down text-xl text-white cursor-pointer" onclick="closePlayer()"></i>
+      <span class="text-xs text-slate-400">GreenTuber Player</span>
+      <i class="fa-solid fa-compress text-sm text-white cursor-pointer" onclick="togglePIP()"></i>
+    </div>
+    
+    <div class="relative w-full aspect-video bg-black sticky top-0 z-10">
+      <video id="video-player" controls class="w-full h-full" autoplay></video>
+    </div>
+
+    <div id="player-info-container">
+      <div class="p-4 border-b border-[#222]">
+        <h1 id="video-title" class="text-sm font-medium line-clamp-2 mb-1">Đang tải video...</h1>
+        <p id="video-views" class="text-xs text-slate-400">...</p>
+        
+        <div class="flex justify-around py-4 mt-2 border-t border-[#222]">
+          <div class="action-btn" onclick="downloadCurrentVideo()"><i class="fa-solid fa-download accent-green"></i>Tải xuống</div>
+          <div class="action-btn" onclick="shareVideo()"><i class="fa-solid fa-share"></i>Chia sẻ</div>
+          <div class="action-btn" onclick="playBackground()"><i class="fa-solid fa-headphones"></i>Nền</div>
+          <div class="action-btn" onclick="togglePIP()"><i class="fa-regular fa-window-restore"></i>Pop-up</div>
+        </div>
+      </div>
+
+      <div class="p-4 flex items-center justify-between border-b border-[#222]">
+        <div class="flex items-center gap-3">
+          <img id="channel-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=Channel" class="w-9 h-9 rounded-full">
+          <div>
+            <p id="video-author" class="font-medium text-sm">Tên kênh</p>
+            <p class="text-xs text-slate-400">Xác minh</p>
+          </div>
+        </div>
+        <button id="sub-btn" onclick="toggleSubscribe()" class="bg-accent-green text-black text-xs font-bold px-4 py-1.5 rounded-full">Đăng ký</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs px-4 py-2 rounded-full shadow-lg z-[500] hidden transition"></div>
+
+  <script>
+    // Danh sách các Nodes API YouTube sẵn có
+    const API_NODES = [
+      "https://pipedapi.kavin.rocks",
+      "https://pipedapi.mha.fi",
+      "https://api.piped.privacydev.net",
+      "https://pipedapi.col2.dev",
+      "https://piped-api.garudalinux.org"
+    ];
+
+    let activeNode = null;
+    let currentVideoData = null;
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2500);
+    }
+
+    // TỰ ĐỘNG TÌM SERVER "SỐNG" VÀ HOẠT ĐỘNG TỐT NHẤT
+    async function findWorkingServer(force = false) {
+      if (activeNode && !force) return activeNode;
+      
+      const main = document.getElementById('main-content');
+      main.innerHTML = `<div class="text-center py-20 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl accent-green mb-2"></i><br>Đang tự động kết nối máy chủ YouTube API...</div>`;
+
+      for (let node of API_NODES) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`${node}/trending?region=VN`, { signal: controller.signal });
+          clearTimeout(timer);
+
+          if (res.ok) {
+            activeNode = node;
+            if(force) toast("Đã chuyển sang máy chủ YouTube API mới!");
+            return node;
+          }
+        } catch (e) {
+          continue; // Nếu server này lỗi, tự động kiểm tra server kế tiếp
+        }
+      }
+      throw new Error("Không tìm thấy server phù hợp");
+    }
+
+    // TỰ ĐỘNG LẤY VIDEO TỪ YOUTUBE API
+    async function autoLoadYouTubeData(endpoint) {
+      try {
+        const node = await findWorkingServer();
+        const res = await fetch(`${node}${endpoint}`);
+        if (!res.ok) throw new Error();
+        return await res.json();
+      } catch (err) {
+        // Thử lại bằng cách tìm server mới
+        const node = await findWorkingServer(true);
+        const res = await fetch(`${node}${endpoint}`);
+        return await res.json();
+      }
+    }
+
+    // Tải Video Xu hướng tự động
+    async function loadTrending() {
+      try {
+        const videos = await autoLoadYouTubeData('/trending?region=VN');
+        renderVideos(videos);
+      } catch {
+        document.getElementById('main-content').innerHTML = `
+          <div class="text-center py-20 text-xs text-red-400">
+            <p class="mb-3">Không thể tải tự động API YouTube do mạng bận.</p>
+            <button onclick="findWorkingServer(true).then(loadTrending)" class="bg-accent-green text-black px-4 py-2 rounded-full font-bold">Thử lại</button>
+          </div>`;
+      }
+    }
+
+    // Tải theo danh mục tự động
+    async function loadCategory(q) {
+      document.getElementById('main-content').innerHTML = `<div class="text-center py-20 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin text-xl mb-2"></i><br>Đang tải video...</div>`;
+      try {
+        const data = await autoLoadYouTubeData(`/search?q=${encodeURIComponent(q)}&filter=videos`);
+        renderVideos(data.items);
+      } catch {
+        toast("Lỗi tải danh mục");
+      }
+    }
+
+    // Tự động phát Video khi click
+    async function playVideoById(videoId) {
+      const playerView = document.getElementById('player-view');
+      const player = document.getElementById('video-player');
+      
+      document.getElementById('video-title').innerText = "Đang tải dữ liệu stream...";
+      playerView.style.display = 'flex';
+
+      try {
+        const data = await autoLoadYouTubeData(`/streams/${videoId}`);
+        currentVideoData = data;
+
+        document.getElementById('video-title').innerText = data.title;
+        document.getElementById('video-author').innerText = data.uploader;
+        document.getElementById('video-views').innerText = `${(data.views || 0).toLocaleString()} lượt xem`;
+        if (data.uploaderAvatar) document.getElementById('channel-avatar').src = data.uploaderAvatar;
+
+        const stream = data.videoStreams.find(s => s.mimeType.includes('video/mp4') && s.quality) || data.videoStreams[0];
+        if (stream && stream.url) {
+          player.src = stream.url;
+          player.play();
+        }
+      } catch {
+        toast("Không tải được video này");
+      }
+    }
+
+    // Hiển thị danh sách Video lên Giao diện
+    function renderVideos(list) {
+      const main = document.getElementById('main-content');
+      main.innerHTML = '';
+      
+      if (!list || list.length === 0) {
+        main.innerHTML = `<div class="text-center py-20 text-xs text-slate-400">Không có video nào.</div>`;
+        return;
+      }
+
+      list.forEach(item => {
+        const id = item.url ? item.url.replace('/watch?v=', '') : item.id;
+        if (!id) return;
+
+        const card = document.createElement('div');
+        card.className = "mb-4 cursor-pointer";
+        card.onclick = () => playVideoById(id);
+
+        card.innerHTML = `
+          <div class="relative aspect-video w-full bg-slate-900">
+            <img src="${item.thumbnail}" class="w-full h-full object-cover" loading="lazy">
+            <span class="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded">
+              ${item.duration ? Math.floor(item.duration/60) + ':' + ('0'+item.duration%60).slice(-2) : 'LIVE'}
+            </span>
+          </div>
+          <div class="p-3 flex gap-3">
+            <img src="${item.uploaderAvatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + (item.uploaderName||'C')}" class="w-9 h-9 rounded-full flex-shrink-0">
+            <div class="flex-1 overflow-hidden">
+              <h3 class="text-xs font-medium text-white line-clamp-2 mb-1">${item.title}</h3>
+              <p class="text-[11px] text-slate-400">${item.uploaderName || item.uploader}</p>
+            </div>
+          </div>
+        `;
+        main.appendChild(card);
+      });
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+      document.getElementById(`nav-${tab}`)?.classList.add('active');
+      closePlayer();
+
+      if (tab === 'home') loadTrending();
+      else if (tab === 'shorts') loadCategory('Shorts YouTube');
+      else if (tab === 'music') loadCategory('Nhạc Trẻ Mới Nhất');
+      else if (tab === 'library') {
+        document.getElementById('main-content').innerHTML = `
+          <div class="p-4">
+            <div class="bg-[#181818] p-4 rounded-xl border border-[#222]">
+              <h3 class="font-bold text-sm mb-1">Thư viện GreenTuber</h3>
+              <p class="text-xs text-slate-400">Dữ liệu video được tải tự động hoàn toàn từ hệ thống YouTube API sạch.</p>
+            </div>
+          </div>`;
+      }
+    }
+
+    function closePlayer() {
+      const player = document.getElementById('video-player');
+      player.pause(); player.src = "";
+      const p = document.getElementById('player-view');
+      p.style.display = 'none';
+      p.classList.remove('pip-mode');
+    }
+
+    function togglePIP() { document.getElementById('player-view').classList.toggle('pip-mode'); }
+    function playBackground() { toast("Đang phát nhạc nền..."); togglePIP(); }
+    function downloadCurrentVideo() { if(currentVideoData) window.open(currentVideoData.videoStreams[0].url, '_blank'); }
+    function shareVideo() { navigator.clipboard.writeText(window.location.href); toast("Đã sao chép link!"); }
+    function toggleSubscribe() { const b = document.getElementById('sub-btn'); b.innerText = (b.innerText === "Đăng ký") ? "Đã đăng ký" : "Đăng ký"; }
+    function toggleSearch() { document.getElementById('search-form').classList.toggle('hidden'); }
+
+    document.getElementById('search-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = document.getElementById('search-input').value.trim();
+      if (q) loadCategory(q);
+    });
+
+    // Khởi chạy: Tự động kết nối server API và tự động tải danh sách video YouTube ngay lập tức
+    loadTrending();
+  </script>
+</body>
+</html>
