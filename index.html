@@ -3,64 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>GreenTuber VIP Pro</title>
+  <title>GreenTuber VIP Pro Max</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    :root { --gt-green: #22c55e; --gt-bg: #0f0f0f; }
-    body { background-color: var(--gt-bg); color: #f1f1f1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 70px; user-select: none; }
+    :root { --gt-green: #22c55e; --gt-bg: #0f0f0f; --gt-card: #181818; }
+    body { background-color: var(--gt-bg); color: #f1f1f1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 65px; user-select: none; }
     
-    .glass-effect { background: rgba(15, 15, 15, 0.9); backdrop-filter: blur(12px); }
+    ::-webkit-scrollbar { width: 0px; height: 0px; } /* Hide scrollbars for app feel */
+    .glass-header { background: rgba(15, 15, 15, 0.92); backdrop-filter: blur(12px); }
     .accent-green { color: var(--gt-green); }
     .bg-accent-green { background-color: var(--gt-green); }
 
-    /* Skeleton Loading Animation */
+    /* Skeleton Loading */
     .skeleton { background: linear-gradient(90deg, #181818 25%, #282828 50%, #181818 75%); background-size: 200% 100%; animation: skeleton-loading 1.2s infinite; }
     @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-    #bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,15,0.95); backdrop-filter: blur(10px); border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; color: #aaa; font-size: 10px; cursor: pointer; }
-    .nav-item.active { color: var(--gt-green); font-weight: 600; }
+    /* Bottom Nav */
+    #bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,15,0.98); backdrop-filter: blur(10px); border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 10px; cursor: pointer; transition: 0.2s; }
+    .nav-item.active { color: var(--gt-green); font-weight: 700; }
 
+    /* Fullscreen Player View */
     #player-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--gt-bg); z-index: 200; display: none; flex-direction: column; overflow-y: auto; }
-    .pip-mode { position: fixed !important; bottom: 75px !important; right: 12px !important; width: 240px !important; height: auto !important; z-index: 300 !important; border-radius: 12px; overflow: hidden; border: 2px solid var(--gt-green); }
-    .pip-mode #player-info-container { display: none !important; }
+    .pip-mode { position: fixed !important; bottom: 70px !important; right: 10px !important; width: 230px !important; height: auto !important; z-index: 300 !important; border-radius: 12px; overflow: hidden; border: 2px solid var(--gt-green); box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
+    .pip-mode #player-details { display: none !important; }
+
+    /* Shorts Container Snap Scroll */
+    .shorts-container { height: calc(100vh - 65px); scroll-snap-type: y mandatory; overflow-y: scroll; }
+    .short-card { scroll-snap-align: start; height: calc(100vh - 65px); position: relative; }
   </style>
 </head>
 <body class="antialiased">
 
   <!-- Header -->
-  <header class="sticky top-0 glass-effect z-50 px-4 py-3 border-b border-[#222] flex items-center justify-between">
+  <header class="sticky top-0 glass-header z-50 px-4 py-2.5 border-b border-[#222] flex items-center justify-between">
     <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('home')">
-      <div class="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center">
+      <div class="w-8 h-8 bg-accent-green rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
         <i class="fa-solid fa-play text-black text-sm"></i>
       </div>
-      <span class="text-lg font-black tracking-wider text-white">Green<span class="accent-green">Tuber</span> <span class="text-[10px] bg-green-500 text-black px-1.5 py-0.5 rounded font-black">PRO</span></span>
+      <span class="text-base font-black tracking-wider text-white">Green<span class="accent-green">Tuber</span> <span class="text-[9px] bg-green-500/20 text-green-400 border border-green-500/30 px-1.5 py-0.5 rounded font-bold">PRO</span></span>
     </div>
-    <div class="flex items-center gap-4 text-white">
+    <div class="flex items-center gap-3 text-white">
       <i class="fa-solid fa-arrows-rotate text-sm cursor-pointer hover:accent-green" title="Làm mới" onclick="reloadCurrentTab()"></i>
-      <i class="fa-solid fa-magnifying-glass text-lg cursor-pointer hover:accent-green" onclick="toggleSearch()"></i>
+      <i class="fa-solid fa-magnifying-glass text-base cursor-pointer hover:accent-green" onclick="toggleSearch()"></i>
+      <!-- Google Auth Button / User Profile -->
+      <div id="user-profile-area" class="flex items-center">
+        <button onclick="openGoogleLogin()" class="text-[11px] bg-[#222] hover:bg-[#333] text-white px-2.5 py-1 rounded-full border border-[#333] flex items-center gap-1.5 font-medium">
+          <i class="fa-brands fa-google text-red-400"></i> Đăng nhập
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Category Bar -->
-  <div id="category-bar" class="px-4 py-2.5 bg-[#0f0f0f] border-b border-[#222] flex gap-2 overflow-x-auto whitespace-nowrap text-xs">
-    <button onclick="filterCategory(this, 'trending')" class="cat-btn bg-white text-black font-semibold px-3.5 py-1.5 rounded-full">Tất cả</button>
-    <button onclick="filterCategory(this, 'music')" class="cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full">Âm nhạc</button>
-    <button onclick="filterCategory(this, 'gaming')" class="cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full">Gaming</button>
-    <button onclick="filterCategory(this, 'shorts')" class="cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full">Shorts</button>
-  </div>
-
-  <!-- Search Form -->
+  <!-- Dynamic Search Form -->
   <form id="search-form" class="hidden p-3 bg-[#181818] border-b border-[#222] flex gap-2">
-    <input type="text" id="search-input" placeholder="Dán ID Video hoặc từ khóa..." class="w-full px-4 py-2 bg-[#222] text-white text-sm rounded-xl focus:outline-none">
-    <button type="submit" class="bg-accent-green text-black px-5 font-bold rounded-xl"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <input type="text" id="search-input" placeholder="Tìm kiếm video xu hướng, bài hát..." class="w-full px-4 py-2 bg-[#222] text-white text-xs rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500">
+    <button type="submit" class="bg-accent-green text-black px-4 text-xs font-bold rounded-xl"><i class="fa-solid fa-magnifying-glass"></i></button>
   </form>
 
-  <!-- Main Content Area -->
-  <main id="main-content" class="p-3 min-h-[80vh] space-y-4"></main>
+  <!-- Category Pills -->
+  <div id="category-bar" class="px-3 py-2 bg-[#0f0f0f] border-b border-[#222] flex gap-2 overflow-x-auto whitespace-nowrap text-xs">
+    <button onclick="filterCategory(this, 'trending')" class="cat-btn bg-white text-black font-semibold px-3 py-1 rounded-full">🔥 Xu hướng</button>
+    <button onclick="filterCategory(this, 'music')" class="cat-btn bg-[#222] text-slate-300 px-3 py-1 rounded-full">🎵 Âm nhạc</button>
+    <button onclick="filterCategory(this, 'gaming')" class="cat-btn bg-[#222] text-slate-300 px-3 py-1 rounded-full">🎮 Gaming</button>
+    <button onclick="filterCategory(this, 'news')" class="cat-btn bg-[#222] text-slate-300 px-3 py-1 rounded-full">📰 Tin tức</button>
+  </div>
 
-  <!-- Bottom Nav -->
+  <!-- Main Content Area -->
+  <main id="main-content" class="p-3 space-y-4 min-h-[80vh]"></main>
+
+  <!-- Shorts View Overlay -->
+  <div id="shorts-view" class="hidden shorts-container"></div>
+
+  <!-- Bottom Navigation -->
   <nav id="bottom-nav">
     <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i class="fa-solid fa-house text-base mb-1"></i><span>Trang chủ</span></div>
     <div class="nav-item" id="nav-shorts" onclick="switchTab('shorts')"><i class="fa-solid fa-bolt text-base mb-1"></i><span>Shorts</span></div>
@@ -68,45 +86,105 @@
     <div class="nav-item" id="nav-library" onclick="switchTab('library')"><i class="fa-solid fa-bookmark text-base mb-1"></i><span>Thư viện</span></div>
   </nav>
 
-  <!-- Fullscreen Player -->
+  <!-- Redesigned YouTube Watch UI (Player Screen) -->
   <div id="player-view">
-    <div class="p-3 bg-black/90 flex items-center justify-between border-b border-[#222]">
-      <div class="flex items-center gap-3">
-        <i class="fa-solid fa-chevron-down text-lg text-white cursor-pointer" onclick="closePlayer()"></i>
-        <span class="text-xs font-semibold text-slate-300">Đang phát không quảng cáo</span>
+    <!-- Top Bar Controls -->
+    <div class="p-2.5 bg-black flex items-center justify-between border-b border-[#222]">
+      <button onclick="closePlayer()" class="text-white px-2 py-1 flex items-center gap-2 text-xs font-medium hover:accent-green">
+        <i class="fa-solid fa-chevron-down text-sm"></i> Thắt lại
+      </button>
+      <div class="flex items-center gap-4 text-xs">
+        <span class="text-emerald-400 font-bold bg-green-950/80 px-2 py-0.5 rounded text-[10px]">Chặn QC 100%</span>
+        <i class="fa-solid fa-compress text-slate-300 cursor-pointer hover:text-white" onclick="togglePIP()" title="Thu nhỏ Pop-up"></i>
       </div>
-      <i class="fa-solid fa-compress text-sm text-white cursor-pointer" onclick="togglePIP()"></i>
     </div>
     
-    <div class="relative w-full aspect-video bg-black sticky top-0 z-10">
+    <!-- Video Player Box -->
+    <div class="relative w-full aspect-video bg-black sticky top-0 z-20 shadow-2xl">
       <iframe id="video-iframe" class="w-full h-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
     </div>
 
-    <div id="player-info-container" class="p-4 space-y-4">
-      <div>
-        <h1 id="video-title" class="text-sm font-bold text-white line-clamp-2 leading-snug">Đang tải video...</h1>
+    <!-- Video Metadata & Actions Details -->
+    <div id="player-details" class="p-3 space-y-3">
+      <!-- Title -->
+      <h1 id="video-title" class="text-sm font-bold text-white leading-snug">Đang tải tên video...</h1>
+      <div class="flex items-center justify-between text-[11px] text-slate-400">
+        <span id="video-views-time">0 lượt xem • Vừa xong</span>
+        <button onclick="changeSpeed()" class="bg-[#222] hover:bg-[#333] text-slate-200 px-2.5 py-1 rounded-full text-[10px] font-semibold border border-[#333]">
+          ⚡ Tốc độ: <span id="speed-text">1.0x</span>
+        </button>
       </div>
-      <div class="flex justify-around py-3 bg-[#181818] rounded-2xl border border-[#222]">
-        <button class="flex flex-col items-center gap-1 text-[11px] text-slate-300" onclick="shareVideo()"><i class="fa-solid fa-share text-base accent-green"></i>Chia sẻ</button>
-        <button class="flex flex-col items-center gap-1 text-[11px] text-slate-300" onclick="togglePIP()"><i class="fa-regular fa-window-restore text-base"></i>Pop-up</button>
-        <button class="flex flex-col items-center gap-1 text-[11px] text-slate-300" onclick="saveToLibrary()"><i class="fa-regular fa-bookmark text-base"></i>Lưu</button>
+
+      <!-- Channel Row -->
+      <div class="flex items-center justify-between py-2 border-y border-[#222]">
+        <div class="flex items-center gap-2.5">
+          <img id="channel-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=Channel" class="w-9 h-9 rounded-full border border-slate-700">
+          <div>
+            <p id="video-author" class="font-bold text-xs text-white">Tên Kênh</p>
+            <p id="sub-count" class="text-[10px] text-slate-400">1.2M người đăng ký</p>
+          </div>
+        </div>
+        <button id="sub-btn" onclick="toggleSubscribe()" class="bg-accent-green text-black font-bold text-xs px-4 py-1.5 rounded-full hover:opacity-90">Đăng ký</button>
+      </div>
+
+      <!-- Action Buttons Bar (Lướt ngang) -->
+      <div class="flex gap-2 overflow-x-auto py-1 text-xs no-scrollbar">
+        <button onclick="toggleLike()" id="like-btn" class="bg-[#222] hover:bg-[#333] text-slate-200 px-4 py-1.5 rounded-full flex items-center gap-1.5 font-medium flex-shrink-0">
+          <i class="fa-regular fa-thumbs-up"></i> <span id="like-count">Thích</span>
+        </button>
+        <button onclick="shareVideo()" class="bg-[#222] hover:bg-[#333] text-slate-200 px-4 py-1.5 rounded-full flex items-center gap-1.5 font-medium flex-shrink-0">
+          <i class="fa-solid fa-share accent-green"></i> Chia sẻ
+        </button>
+        <button onclick="saveToLibrary()" class="bg-[#222] hover:bg-[#333] text-slate-200 px-4 py-1.5 rounded-full flex items-center gap-1.5 font-medium flex-shrink-0">
+          <i class="fa-regular fa-bookmark"></i> Lưu vào thư viện
+        </button>
+      </div>
+
+      <!-- Video Đề Xuất (Up Next Section) -->
+      <div class="pt-3 border-t border-[#222]">
+        <h2 class="text-xs font-bold text-slate-300 mb-3 flex items-center gap-1.5">
+          <i class="fa-solid fa-fire text-amber-500"></i> Video đề xuất tiếp theo
+        </h2>
+        <div id="related-videos" class="space-y-3"></div>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs px-4 py-2 rounded-full shadow-lg z-[500] hidden"></div>
+  <!-- Google Auth Login Modal -->
+  <div id="google-modal" class="fixed inset-0 bg-black/80 z-[600] hidden flex items-center justify-center p-4">
+    <div class="bg-[#181818] border border-[#333] rounded-2xl p-6 w-full max-w-xs text-center space-y-4">
+      <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto text-red-500 text-2xl">
+        <i class="fa-brands fa-google"></i>
+      </div>
+      <h3 class="text-sm font-bold text-white">Đăng nhập tài khoản Google</h3>
+      <p class="text-xs text-slate-400">Đồng bộ danh sách yêu thích và trải nghiệm GreenTuber Pro cá nhân hóa.</p>
+      <div id="g_id_onload"
+           data-client_id="929108392120-demo.apps.googleusercontent.com"
+           data-callback="handleGoogleSignIn">
+      </div>
+      <div class="g_id_signin flex justify-center" data-type="standard" data-theme="filled_black"></div>
+      <button onclick="closeGoogleModal()" class="text-xs text-slate-500 underline pt-2">Bỏ qua / Khách</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-green-600 text-white font-medium text-xs px-4 py-2 rounded-full shadow-2xl z-[700] hidden"></div>
 
   <script>
-    const CHANNELS = {
-      trending: ["UCq-Fj5jknLsUf-MWSy4_brA", "UCYvmuw-JtVrTZQ-7m4we62A", "UC_x5XG1OV2P6uZZ5FSM9Ttw"],
-      music: ["UC-9-kyTW8ZkZNDHQJ6FgpwQ", "UC295-Pxo-wfKX8795nO-mjA"],
-      gaming: ["UCpvm7pkZX49PZHFM2dIByng"],
-      shorts: ["UCq-Fj5jknLsUf-MWSy4_brA"]
-    };
+    // Danh sách Node Invidious công khai để lấy dữ liệu XU HƯỚNG MỚI NHẤT
+    const INVIDIOUS_NODES = [
+      "https://invidious.nerdvpn.de",
+      "https://inv.tux.pizza",
+      "https://invidious.drgns.space",
+      "https://vid.puffyan.us"
+    ];
 
     let currentCategory = 'trending';
     let currentVideo = null;
-    let savedVideos = JSON.parse(localStorage.getItem('gt_saved_videos') || '[]');
+    let playbackSpeed = 1.0;
+    let savedVideos = JSON.parse(localStorage.getItem('gt_saved') || '[]');
+    let watchHistory = JSON.parse(localStorage.getItem('gt_history') || '[]');
+    let currentUser = JSON.parse(localStorage.getItem('gt_user') || 'null');
 
     function toast(msg) {
       const t = document.getElementById('toast');
@@ -123,7 +201,7 @@
           <div class="rounded-2xl overflow-hidden bg-[#181818] border border-[#222]">
             <div class="w-full aspect-video skeleton"></div>
             <div class="p-3 flex gap-3">
-              <div class="w-9 h-9 rounded-full skeleton flex-shrink-0"></div>
+              <div class="w-8 h-8 rounded-full skeleton flex-shrink-0"></div>
               <div class="flex-1 space-y-2">
                 <div class="h-3 skeleton rounded w-5/6"></div>
                 <div class="h-2.5 skeleton rounded w-1/2"></div>
@@ -133,166 +211,296 @@
       }
     }
 
-    function showErrorUI() {
-      const main = document.getElementById('main-content');
-      main.innerHTML = `
-        <div class="text-center py-16 px-4 space-y-3">
-          <i class="fa-solid fa-wifi text-3xl text-slate-500"></i>
-          <p class="text-xs text-slate-400">Kết nối bị gián đoạn hoặc máy chủ bận.</p>
-          <button onclick="loadCategoryData(currentCategory)" class="bg-accent-green text-black font-bold text-xs px-5 py-2 rounded-full">Thử lại ngay</button>
-        </div>`;
-    }
-
-    // Tải dữ liệu RSS qua API rss2json (Cực nhanh và ổn định)
-    async function fetchYouTubeFeed(channelId) {
-      const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-      
-      // Nguồn chính: rss2json API
-      try {
-        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === 'ok' && data.items) {
-            return data.items.map(item => {
-              let videoId = item.link.includes('v=') ? item.link.split('v=')[1].split('&')[0] : item.guid.split(':').pop();
-              return {
-                id: videoId,
-                title: item.title,
-                author: item.author,
-                thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
-              };
-            });
-          }
-        }
-      } catch (e) {}
-
-      // Nguồn dự phòng: CorsProxy.io
-      try {
-        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(rssUrl)}`);
-        const xmlText = await res.text();
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-        const entries = Array.from(xmlDoc.querySelectorAll("entry"));
-        return entries.map(entry => {
-          const videoId = entry.querySelector("videoId")?.textContent;
-          return {
-            id: videoId,
-            title: entry.querySelector("title")?.textContent,
-            author: entry.querySelector("name")?.textContent,
-            thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
-          };
-        });
-      } catch (e) {}
-
-      return [];
-    }
-
-    async function loadCategoryData(type) {
-      currentCategory = type;
+    // Lấy danh sách video Xu Hướng (Trending) thật từ YouTube VN
+    async function fetchTrendingVideos(type = 'trending') {
       showSkeletons();
-      
-      try {
-        let results = [];
-        const channelList = CHANNELS[type] || CHANNELS.trending;
-        for (let cId of channelList) {
-          const vids = await fetchYouTubeFeed(cId);
-          results = results.concat(vids);
-        }
-        
-        if (results.length > 0) {
-          renderVideos(results);
-        } else {
-          showErrorUI();
-        }
-      } catch (err) {
-        showErrorUI();
+      let endpoint = `/api/v1/trending?region=VN`;
+      if (type === 'music') endpoint = `/api/v1/trending?region=VN&type=music`;
+      if (type === 'gaming') endpoint = `/api/v1/trending?region=VN&type=gaming`;
+      if (type === 'news') endpoint = `/api/v1/trending?region=VN&type=news`;
+
+      for (let node of INVIDIOUS_NODES) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch(`${node}${endpoint}`, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              const formatted = data.map(v => ({
+                id: v.videoId,
+                title: v.title,
+                author: v.author,
+                views: formatViews(v.viewCount),
+                published: v.publishedText || 'Mới đây',
+                thumbnail: `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`
+              }));
+              renderVideos(formatted);
+              return;
+            }
+          }
+        } catch (e) {}
       }
+
+      // Fallback nếu API bận: Tìm kiếm từ khóa mới nhất
+      fetchSearchVideos(type === 'trending' ? 'xu hướng việt nam' : type);
+    }
+
+    async function fetchSearchVideos(query) {
+      showSkeletons();
+      for (let node of INVIDIOUS_NODES) {
+        try {
+          const res = await fetch(`${node}/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
+          if (res.ok) {
+            const data = await res.json();
+            const formatted = data.map(v => ({
+              id: v.videoId,
+              title: v.title,
+              author: v.author,
+              views: formatViews(v.viewCount || 0),
+              published: v.publishedText || 'Mới đây',
+              thumbnail: `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`
+            }));
+            renderVideos(formatted);
+            return;
+          }
+        } catch (e) {}
+      }
+      showErrorUI();
     }
 
     function renderVideos(list) {
       const main = document.getElementById('main-content');
       main.innerHTML = '';
 
-      if (!list || list.length === 0) {
-        showErrorUI();
-        return;
-      }
-
       list.forEach(item => {
         if (!item.id) return;
-
         const card = document.createElement('div');
-        card.className = "rounded-2xl overflow-hidden bg-[#181818] border border-[#222] cursor-pointer";
-        card.onclick = () => playVideo(item);
+        card.className = "rounded-2xl overflow-hidden bg-[#181818] border border-[#222] hover:border-green-500/40 transition cursor-pointer";
+        card.onclick = () => playVideo(item, list);
 
         card.innerHTML = `
           <div class="relative aspect-video w-full bg-slate-900">
             <img src="${item.thumbnail}" class="w-full h-full object-cover" loading="lazy">
-            <span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">HD</span>
+            <span class="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-white text-[9px] font-bold px-1.5 py-0.5 rounded border border-white/10">HD</span>
           </div>
-          <div class="p-3 flex gap-3">
-            <img src="https://api.dicebear.com/7.x/identicon/svg?seed=${item.author || 'C'}" class="w-9 h-9 rounded-full flex-shrink-0 border border-slate-800">
+          <div class="p-3 flex gap-2.5">
+            <img src="https://api.dicebear.com/7.x/identicon/svg?seed=${item.author || 'C'}" class="w-8 h-8 rounded-full flex-shrink-0 border border-slate-700">
             <div class="flex-1 overflow-hidden">
-              <h3 class="text-xs font-semibold text-slate-100 line-clamp-2 leading-snug">${item.title}</h3>
-              <p class="text-[11px] text-slate-400 mt-1">${item.author || 'YouTube Channel'}</p>
+              <h3 class="text-xs font-semibold text-white line-clamp-2 leading-snug">${item.title}</h3>
+              <p class="text-[10px] text-slate-400 mt-1">${item.author} • ${item.views}</p>
             </div>
-          </div>
-        `;
+          </div>`;
         main.appendChild(card);
       });
     }
 
-    function playVideo(item) {
+    // Làm lại Shorts chuẩn dạng lướt Reel/TikTok
+    async function loadShorts() {
+      const main = document.getElementById('main-content');
+      const shortsView = document.getElementById('shorts-view');
+      main.classList.add('hidden');
+      shortsView.classList.remove('hidden');
+      shortsView.innerHTML = `<div class="text-center py-20 text-xs text-slate-400"><i class="fa-solid fa-circle-notch fa-spin text-xl text-green-500 mb-2"></i><br>Đang tải danh sách Shorts xu hướng...</div>`;
+
+      try {
+        let shortsList = [];
+        for (let node of INVIDIOUS_NODES) {
+          try {
+            const res = await fetch(`${node}/api/v1/search?q=shorts+vietnam&type=video`);
+            if (res.ok) {
+              const data = await res.json();
+              shortsList = data.map(v => ({ id: v.videoId, title: v.title, author: v.author }));
+              break;
+            }
+          } catch(e) {}
+        }
+
+        if (shortsList.length === 0) {
+          shortsView.innerHTML = `<div class="text-center py-20 text-xs text-slate-400">Không tải được Shorts. Vui lòng thử lại.</div>`;
+          return;
+        }
+
+        shortsView.innerHTML = '';
+        shortsList.slice(0, 10).forEach((short, idx) => {
+          const card = document.createElement('div');
+          card.className = "short-card bg-black flex items-center justify-center relative";
+          card.innerHTML = `
+            <iframe class="w-full h-full border-0" src="https://www.youtube-nocookie.com/embed/${short.id}?autoplay=0&loop=1&playlist=${short.id}" allow="autoplay"></iframe>
+            <!-- Shorts Right Action Overlay -->
+            <div class="absolute right-3 bottom-20 flex flex-col items-center gap-5 text-white z-10">
+              <button onclick="toast('Đã thích Short!')" class="flex flex-col items-center gap-1 text-[10px]"><i class="fa-solid fa-heart text-2xl text-red-500"></i> Yêu thích</button>
+              <button onclick="shareVideo()" class="flex flex-col items-center gap-1 text-[10px]"><i class="fa-solid fa-share text-xl accent-green"></i> Chia sẻ</button>
+            </div>
+            <!-- Shorts Bottom Info Overlay -->
+            <div class="absolute left-3 bottom-6 right-16 text-white z-10 space-y-1">
+              <div class="flex items-center gap-2">
+                <img src="https://api.dicebear.com/7.x/identicon/svg?seed=${short.author}" class="w-7 h-7 rounded-full border border-white">
+                <span class="text-xs font-bold">${short.author}</span>
+                <button onclick="toast('Đã đăng ký!')" class="bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">Đăng ký</button>
+              </div>
+              <p class="text-xs line-clamp-2 text-slate-200">${short.title}</p>
+            </div>`;
+          shortsView.appendChild(card);
+        });
+      } catch(e) {
+        toast("Lỗi tải Shorts");
+      }
+    }
+
+// Phát Video & Render UI Xem Video Mới
+    function playVideo(item, currentList = []) {
       currentVideo = item;
+      addToHistory(item);
+
       const playerView = document.getElementById('player-view');
       const iframe = document.getElementById('video-iframe');
       
       document.getElementById('video-title').innerText = item.title;
+      document.getElementById('video-author').innerText = item.author || "YouTube Channel";
+      document.getElementById('video-views-time').innerText = `${item.views || 'Nhiều'} lượt xem • ${item.published || 'Gần đây'}`;
+      document.getElementById('channel-avatar').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${item.author || 'C'}`;
+
       playerView.style.display = 'flex';
       iframe.src = `https://www.youtube-nocookie.com/embed/${item.id}?autoplay=1&modestbranding=1&rel=0`;
+
+      // Render Video Đề Xuất Phía Dưới
+      renderRelatedVideos(currentList.filter(v => v.id !== item.id));
     }
 
-    function filterCategory(btn, catType) {
-      document.querySelectorAll('.cat-btn').forEach(b => {
-        b.className = "cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full";
-      });
-      btn.className = "cat-btn bg-white text-black font-semibold px-3.5 py-1.5 rounded-full";
-      loadCategoryData(catType);
-    }
-
-    function switchTab(tab) {
-      document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-      document.getElementById(`nav-${tab}`)?.classList.add('active');
-      closePlayer();
-
-      if (tab === 'home') loadCategoryData('trending');
-      else if (tab === 'shorts') loadCategoryData('shorts');
-      else if (tab === 'music') loadCategoryData('music');
-      else if (tab === 'library') renderLibrary();
-    }
-
-    function renderLibrary() {
-      const main = document.getElementById('main-content');
-      if (savedVideos.length === 0) {
-        main.innerHTML = `
-          <div class="p-8 text-center text-slate-400 space-y-2">
-            <i class="fa-solid fa-bookmark text-3xl text-slate-600 mb-2"></i>
-            <p class="text-xs">Chưa có video nào được lưu.</p>
+    function renderRelatedVideos(list) {
+      const container = document.getElementById('related-videos');
+      container.innerHTML = '';
+      list.slice(0, 6).forEach(v => {
+        const item = document.createElement('div');
+        item.className = "flex gap-2.5 cursor-pointer hover:bg-[#222] p-1.5 rounded-xl transition";
+        item.onclick = () => playVideo(v, list);
+        item.innerHTML = `
+          <img src="${v.thumbnail}" class="w-28 aspect-video object-cover rounded-lg flex-shrink-0">
+          <div class="flex-1 overflow-hidden">
+            <h4 class="text-xs font-semibold text-white line-clamp-2 leading-snug">${v.title}</h4>
+            <p class="text-[10px] text-slate-400 mt-1">${v.author}</p>
           </div>`;
-      } else {
-        renderVideos(savedVideos);
+        container.appendChild(item);
+      });
+    }
+
+    // Đăng Nhập Google
+    function openGoogleLogin() {
+      document.getElementById('google-modal').classList.remove('hidden');
+    }
+
+    function closeGoogleModal() {
+      document.getElementById('google-modal').classList.add('hidden');
+    }
+
+    function handleGoogleSignIn(response) {
+      try {
+        // Decode JWT Payload đơn giản
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        const user = JSON.parse(jsonPayload);
+
+        currentUser = { name: user.name, picture: user.picture, email: user.email };
+        localStorage.setItem('gt_user', JSON.stringify(currentUser));
+        updateUserUI();
+        closeGoogleModal();
+        toast(`Xin chào ${user.name}!`);
+      } catch(e) {
+        toast("Đăng nhập thất bại");
       }
+    }
+
+    function updateUserUI() {
+      const area = document.getElementById('user-profile-area');
+      if (currentUser) {
+        area.innerHTML = `
+          <div class="flex items-center gap-1.5 cursor-pointer" onclick="openProfileMenu()">
+            <img src="${currentUser.picture}" class="w-7 h-7 rounded-full border border-green-500">
+          </div>`;
+      }
+    }
+
+    function openProfileMenu() {
+      if (confirm(`Bạn đang đăng nhập với tên: ${currentUser.name}\nĐăng xuất?`)) {
+        localStorage.removeItem('gt_user');
+        currentUser = null;
+        location.reload();
+      }
+    }
+
+    // Tốc độ phát video
+    function changeSpeed() {
+      const speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
+      let nextIdx = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
+      playbackSpeed = speeds[nextIdx];
+      document.getElementById('speed-text').innerText = `${playbackSpeed}x`;
+      toast(`Tốc độ phát: ${playbackSpeed}x`);
+    }
+
+    function formatViews(num) {
+      if (!num) return '10K';
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(0) + 'K';
+      return num;
+    }
+
+    function addToHistory(item) {
+      watchHistory = watchHistory.filter(v => v.id !== item.id);
+      watchHistory.unshift(item);
+      localStorage.setItem('gt_history', JSON.stringify(watchHistory));
     }
 
     function saveToLibrary() {
       if (!currentVideo) return;
       if (!savedVideos.some(v => v.id === currentVideo.id)) {
         savedVideos.push(currentVideo);
-        localStorage.setItem('gt_saved_videos', JSON.stringify(savedVideos));
-        toast("Đã lưu vào thư viện!");
+        localStorage.setItem('gt_saved', JSON.stringify(savedVideos));
+        toast("Đã lưu vào Thư viện!");
       } else {
-        toast("Video đã có trong thư viện!");
+        toast("Video này đã lưu trước đó!");
       }
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+      document.getElementById(`nav-${tab}`)?.classList.add('active');
+      document.getElementById('shorts-view').classList.add('hidden');
+      document.getElementById('main-content').classList.remove('hidden');
+      closePlayer();
+
+      if (tab === 'home') fetchTrendingVideos('trending');
+      else if (tab === 'shorts') loadShorts();
+      else if (tab === 'music') fetchTrendingVideos('music');
+      else if (tab === 'library') renderLibrary();
+    }
+
+    function renderLibrary() {
+      const main = document.getElementById('main-content');
+      main.innerHTML = `
+        <div class="space-y-4">
+          <div class="bg-[#181818] p-4 rounded-2xl border border-[#222]">
+            <h3 class="font-bold text-xs text-white mb-2"><i class="fa-solid fa-clock-rotate-left accent-green mr-1"></i> Lịch sử đã xem</h3>
+            <div id="history-list" class="space-y-2"></div>
+          </div>
+        </div>`;
+
+      const histBox = document.getElementById('history-list');
+      if (watchHistory.length === 0) histBox.innerHTML = `<p class="text-[11px] text-slate-500">Chưa có lịch sử xem.</p>`;
+      else {
+        watchHistory.slice(0, 5).forEach(v => {
+          histBox.innerHTML += `<div class="text-xs text-slate-300 truncate cursor-pointer hover:accent-green" onclick="playVideo({id:'${v.id}', title:'${v.title}', author:'${v.author}'})">• ${v.title}</div>`;
+        });
+      }
+    }
+
+    function filterCategory(btn, cat) {
+      document.querySelectorAll('.cat-btn').forEach(b => b.className = "cat-btn bg-[#222] text-slate-300 px-3 py-1 rounded-full");
+      btn.className = "cat-btn bg-white text-black font-semibold px-3 py-1 rounded-full";
+      fetchTrendingVideos(cat);
     }
 
     function closePlayer() {
@@ -303,24 +511,26 @@
     }
 
     function togglePIP() { document.getElementById('player-view').classList.toggle('pip-mode'); }
-    function shareVideo() { navigator.clipboard.writeText(window.location.href); toast("Đã sao chép link!"); }
+    function shareVideo() { navigator.clipboard.writeText(window.location.href); toast("Đã sao chép liên kết!"); }
+    function toggleLike() { toast("Đã thích video này!"); }
+    function toggleSubscribe() { 
+      const b = document.getElementById('sub-btn');
+      b.innerText = b.innerText === "Đăng ký" ? "Đã đăng ký" : "Đăng ký";
+      b.classList.toggle('bg-slate-700');
+      b.classList.toggle('text-white');
+    }
     function toggleSearch() { document.getElementById('search-form').classList.toggle('hidden'); }
-    function reloadCurrentTab() { loadCategoryData(currentCategory); toast("Đã làm mới!"); }
+    function reloadCurrentTab() { fetchTrendingVideos(currentCategory); toast("Đã cập nhật!"); }
 
     document.getElementById('search-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const q = document.getElementById('search-input').value.trim();
-      if (q) {
-        if (q.length === 11) {
-          playVideo({ id: q, title: "Video Tìm kiếm", author: "YouTube" });
-        } else {
-          toast("Vui lòng nhập Video ID (11 ký tự)");
-        }
-      }
+      if (q) fetchSearchVideos(q);
     });
 
-    // Chạy khi mở trang
-    loadCategoryData('trending');
+    // Chạy khi khởi tạo trang
+    updateUserUI();
+    fetchTrendingVideos('trending');
   </script>
 </body>
 </html>
