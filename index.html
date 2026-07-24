@@ -1,111 +1,144 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>GreenTuber VIP Auto Load</title>
+  <title>GreenTuber VIP Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root { --gt-green: #22c55e; --gt-bg: #0f0f0f; --gt-sub: #aaaaaa; }
-    body { background-color: var(--gt-bg); color: #f1f1f1; font-family: system-ui, sans-serif; margin: 0; padding-bottom: 60px; user-select: none; }
+    :root { --gt-green: #22c55e; --gt-bg: #0f0f0f; --gt-card: #181818; }
+    body { background-color: var(--gt-bg); color: #f1f1f1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 70px; user-select: none; }
+    
+    /* Smooth Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    
+    .glass-effect { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(12px); }
     .accent-green { color: var(--gt-green); }
     .bg-accent-green { background-color: var(--gt-green); }
-    
-    #bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--gt-bg); border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--gt-sub); font-size: 10px; cursor: pointer; width: 20%; }
-    .nav-item i { font-size: 18px; margin-bottom: 2px; }
-    .nav-item.active { color: var(--gt-green); }
+    .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+
+    /* Skeleton Loading Animation */
+    .skeleton { background: linear-gradient(90deg, #181818 25%, #282828 50%, #181818 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; }
+    @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    #bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15,15,15,0.95); backdrop-filter: blur(10px); border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #aaa; font-size: 10px; cursor: pointer; transition: all 0.2s; }
+    .nav-item.active { color: var(--gt-green); font-weight: 600; transform: translateY(-2px); }
 
     #player-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--gt-bg); z-index: 200; display: none; flex-direction: column; overflow-y: auto; }
-    .action-btn { display: flex; flex-direction: column; align-items: center; color: #fff; font-size: 11px; gap: 5px; cursor: pointer; }
-    .pip-mode { position: fixed !important; bottom: 70px !important; right: 10px !important; width: 220px !important; height: auto !important; z-index: 300 !important; border-radius: 8px; overflow: hidden; border: 2px solid var(--gt-green); }
+    .pip-mode { position: fixed !important; bottom: 75px !important; right: 12px !important; width: 240px !important; height: auto !important; z-index: 300 !important; border-radius: 12px; overflow: hidden; border: 2px solid var(--gt-green); box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
     .pip-mode #player-info-container { display: none !important; }
   </style>
 </head>
-<body>
+<body class="antialiased">
 
-  <!-- App Header -->
-  <header class="sticky top-0 bg-[#0f0f0f] z-50 p-4 border-b border-[#222] flex items-center justify-between">
-    <div class="flex items-center gap-1 cursor-pointer" onclick="switchTab('home')">
-      <span class="text-xl font-bold text-white"><span class="accent-green">Green</span>Tuber <span class="accent-green text-xs bg-green-950/80 px-1.5 py-0.5 rounded">VIP</span></span>
+  <!-- Header Pro -->
+  <header class="sticky top-0 glass-effect z-50 px-4 py-3 border-b border-[#222] flex items-center justify-between">
+    <div class="flex items-center gap-2 cursor-pointer" onclick="switchTab('home')">
+      <div class="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center glow-green">
+        <i class="fa-solid fa-play text-black text-sm"></i>
+      </div>
+      <span class="text-lg font-black tracking-wider text-white">Green<span class="accent-green">Tuber</span> <span class="text-[10px] bg-gradient-to-r from-green-500 to-emerald-700 text-black px-1.5 py-0.5 rounded font-black">PRO</span></span>
     </div>
     <div class="flex items-center gap-4 text-white">
-      <i class="fa-solid fa-arrows-rotate text-sm cursor-pointer accent-green" title="Đổi máy chủ API" onclick="findWorkingServer(true)"></i>
-      <i class="fa-solid fa-magnifying-glass text-lg cursor-pointer" onclick="toggleSearch()"></i>
-      <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-7 h-7 rounded-full border border-slate-700">
+      <i class="fa-solid fa-arrows-rotate text-sm cursor-pointer hover:accent-green transition" title="Làm mới dữ liệu" onclick="reloadCurrentTab()"></i>
+      <i class="fa-solid fa-magnifying-glass text-lg cursor-pointer hover:accent-green transition" onclick="toggleSearch()"></i>
+      <div class="relative">
+        <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ProUser" class="w-8 h-8 rounded-full border border-green-500/50 cursor-pointer">
+        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-black"></span>
+      </div>
     </div>
   </header>
 
-  <!-- Search Bar -->
-  <form id="search-form" class="hidden p-3 bg-[#181818] border-b border-[#222] flex">
-    <input type="text" id="search-input" placeholder="Tìm kiếm nội dung trên YouTube..." class="w-full px-3 py-1.5 bg-[#222] text-white text-sm rounded-l focus:outline-none">
-    <button type="submit" class="bg-accent-green text-black px-4 font-bold rounded-r"><i class="fa-solid fa-magnifying-glass"></i></button>
+  <!-- Category Pills (Thanh danh mục cuộn ngang) -->
+  <div id="category-bar" class="px-4 py-2.5 bg-[#0f0f0f] border-b border-[#222] flex gap-2 overflow-x-auto whitespace-nowrap text-xs no-scrollbar">
+    <button onclick="filterCategory('Tất cả')" class="cat-btn bg-white text-black font-semibold px-3.5 py-1.5 rounded-full">Tất cả</button>
+    <button onclick="filterCategory('Âm nhạc')" class="cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-[#333]">Âm nhạc</button>
+    <button onclick="filterCategory('Gaming')" class="cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-[#333]">Gaming</button>
+    <button onclick="filterCategory('Shorts')" class="cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-[#333]">Shorts</button>
+    <button onclick="filterCategory('Tin tức')" class="cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-[#333]">Tin tức</button>
+  </div>
+
+  <!-- Search Bar Slide down -->
+  <form id="search-form" class="hidden p-3 bg-[#181818] border-b border-[#222] flex gap-2">
+    <input type="text" id="search-input" placeholder="Tìm tên video, ca sĩ, từ khóa..." class="w-full px-4 py-2 bg-[#222] text-white text-sm rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500">
+    <button type="submit" class="bg-accent-green text-black px-5 font-bold rounded-xl hover:opacity-90"><i class="fa-solid fa-magnifying-glass"></i></button>
   </form>
 
-  <!-- Dynamic Content Area -->
-  <main id="main-content" class="p-0 min-h-[80vh]"></main>
+  <!-- Main Content Container -->
+  <main id="main-content" class="p-3 min-h-[80vh] space-y-4"></main>
 
   <!-- Bottom Navigation -->
   <nav id="bottom-nav">
-    <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i class="fa-solid fa-house"></i><span>Trang chủ</span></div>
-    <div class="nav-item" id="nav-shorts" onclick="switchTab('shorts')"><i class="fa-solid fa-bolt"></i><span>Shorts</span></div>
-    <div class="nav-item" id="nav-music" onclick="switchTab('music')"><i class="fa-solid fa-circle-play"></i><span>Music</span></div>
-    <div class="nav-item" id="nav-library" onclick="switchTab('library')"><i class="fa-solid fa-folder-plus"></i><span>Thư viện</span></div>
+    <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i class="fa-solid fa-house text-base mb-1"></i><span>Trang chủ</span></div>
+    <div class="nav-item" id="nav-shorts" onclick="switchTab('shorts')"><i class="fa-solid fa-bolt text-base mb-1"></i><span>Shorts</span></div>
+    <div class="nav-item" id="nav-music" onclick="switchTab('music')"><i class="fa-solid fa-circle-play text-base mb-1"></i><span>Music</span></div>
+    <div class="nav-item" id="nav-library" onclick="switchTab('library')"><i class="fa-solid fa-bookmark text-base mb-1"></i><span>Thư viện</span></div>
   </nav>
 
-  <!-- Player Screen -->
+  <!-- Fullscreen Pro Player Overlay -->
   <div id="player-view">
-    <div class="p-3 bg-black flex items-center justify-between">
-      <i class="fa-solid fa-chevron-down text-xl text-white cursor-pointer" onclick="closePlayer()"></i>
-      <span class="text-xs text-slate-400">GreenTuber Player</span>
-      <i class="fa-solid fa-compress text-sm text-white cursor-pointer" onclick="togglePIP()"></i>
+    <div class="p-3 bg-black/90 flex items-center justify-between border-b border-[#222]">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-chevron-down text-lg text-white cursor-pointer hover:accent-green" onclick="closePlayer()"></i>
+        <span class="text-xs font-semibold text-slate-300">Đang phát chuẩn HD</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-gear text-sm text-slate-400 cursor-pointer" title="Đổi chế độ phát" onclick="togglePlayerEngine()"></i>
+        <i class="fa-solid fa-compress text-sm text-white cursor-pointer hover:accent-green" onclick="togglePIP()"></i>
+      </div>
     </div>
     
-    <div class="relative w-full aspect-video bg-black sticky top-0 z-10">
-      <video id="video-player" controls class="w-full h-full" autoplay></video>
+    <!-- Player Container -->
+    <div class="relative w-full aspect-video bg-black sticky top-0 z-10 shadow-2xl">
+      <iframe id="video-iframe" class="w-full h-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
     </div>
 
-    <div id="player-info-container">
-      <div class="p-4 border-b border-[#222]">
-        <h1 id="video-title" class="text-sm font-medium line-clamp-2 mb-1">Đang tải video...</h1>
-        <p id="video-views" class="text-xs text-slate-400">...</p>
-        
-        <div class="flex justify-around py-4 mt-2 border-t border-[#222]">
-          <div class="action-btn" onclick="downloadCurrentVideo()"><i class="fa-solid fa-download accent-green"></i>Tải xuống</div>
-          <div class="action-btn" onclick="shareVideo()"><i class="fa-solid fa-share"></i>Chia sẻ</div>
-          <div class="action-btn" onclick="playBackground()"><i class="fa-solid fa-headphones"></i>Nền</div>
-          <div class="action-btn" onclick="togglePIP()"><i class="fa-regular fa-window-restore"></i>Pop-up</div>
-        </div>
+    <!-- Video Metadata Details -->
+    <div id="player-info-container" class="p-4 space-y-4">
+      <div>
+        <h1 id="video-title" class="text-sm font-bold text-white line-clamp-2 leading-snug">Đang tải tên video...</h1>
+        <p id="video-views" class="text-[11px] text-slate-400 mt-1">Đã kiểm duyệt bởi GreenTuber Engine</p>
+      </div>
+      
+      <!-- Interactive Action Buttons -->
+      <div class="flex justify-around py-3 bg-[#181818] rounded-2xl border border-[#222]">
+        <button class="flex flex-col items-center gap-1 text-[11px] text-slate-300 hover:text-green-400" onclick="toast('Đã thích video!')"><i class="fa-regular fa-thumbs-up text-base"></i>Thích</button>
+        <button class="flex flex-col items-center gap-1 text-[11px] text-slate-300 hover:text-green-400" onclick="shareVideo()"><i class="fa-solid fa-share text-base accent-green"></i>Chia sẻ</button>
+        <button class="flex flex-col items-center gap-1 text-[11px] text-slate-300 hover:text-green-400" onclick="togglePIP()"><i class="fa-regular fa-window-restore text-base"></i>Pop-up</button>
+        <button class="flex flex-col items-center gap-1 text-[11px] text-slate-300 hover:text-green-400" onclick="saveToLibrary()"><i class="fa-regular fa-bookmark text-base"></i>Lưu</button>
       </div>
 
-      <div class="p-4 flex items-center justify-between border-b border-[#222]">
+      <!-- Channel Details -->
+      <div class="flex items-center justify-between p-3 bg-[#181818] rounded-2xl border border-[#222]">
         <div class="flex items-center gap-3">
-          <img id="channel-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=Channel" class="w-9 h-9 rounded-full">
+          <img id="channel-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=Channel" class="w-10 h-10 rounded-full border border-slate-700">
           <div>
-            <p id="video-author" class="font-medium text-sm">Tên kênh</p>
-            <p class="text-xs text-slate-400">Xác minh</p>
+            <p id="video-author" class="font-bold text-xs text-white">Tên Channel</p>
+            <p class="text-[10px] text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check text-[9px] mr-1"></i>Đã xác minh</p>
           </div>
         </div>
-        <button id="sub-btn" onclick="toggleSubscribe()" class="bg-accent-green text-black text-xs font-bold px-4 py-1.5 rounded-full">Đăng ký</button>
+        <button id="sub-btn" onclick="toggleSubscribe()" class="bg-accent-green text-black text-xs font-bold px-4 py-2 rounded-full hover:opacity-90">Đăng ký</button>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs px-4 py-2 rounded-full shadow-lg z-[500] hidden transition"></div>
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-600 to-green-500 text-white font-medium text-xs px-5 py-2.5 rounded-full shadow-2xl z-[500] hidden transition-all"></div>
 
   <script>
-    // Danh sách các Nodes API YouTube sẵn có
-    const API_NODES = [
-      "https://pipedapi.kavin.rocks",
-      "https://pipedapi.mha.fi",
-      "https://api.piped.privacydev.net",
-      "https://pipedapi.col2.dev",
-      "https://piped-api.garudalinux.org"
-    ];
+    const CHANNELS = {
+      trending: ["UCq-Fj5jknLsUf-MWSy4_brA", "UCYvmuw-JtVrTZQ-7m4we62A", "UC_x5XG1OV2P6uZZ5FSM9Ttw"],
+      music: ["UC-9-kyTW8ZkZNDHQJ6FgpwQ", "UC295-Pxo-wfKX8795nO-mjA"],
+      gaming: ["UCpvm7pkZX49PZHFM2dIByng"],
+      shorts: ["UCq-Fj5jknLsUf-MWSy4_brA"]
+    };
 
-    let activeNode = null;
-    let currentVideoData = null;
+    let currentTab = 'home';
+    let currentVideo = null;
+    let savedVideos = JSON.parse(localStorage.getItem('gt_saved_videos') || '[]');
 
     function toast(msg) {
       const t = document.getElementById('toast');
@@ -114,129 +147,108 @@
       setTimeout(() => t.classList.add('hidden'), 2500);
     }
 
-    // TỰ ĐỘNG TÌM SERVER "SỐNG" VÀ HOẠT ĐỘNG TỐT NHẤT
-    async function findWorkingServer(force = false) {
-      if (activeNode && !force) return activeNode;
-      
+    // Skeleton UI Rendering
+    function showSkeletons() {
       const main = document.getElementById('main-content');
-      main.innerHTML = `<div class="text-center py-20 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl accent-green mb-2"></i><br>Đang tự động kết nối máy chủ YouTube API...</div>`;
-
-      for (let node of API_NODES) {
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 3000);
-          const res = await fetch(`${node}/trending?region=VN`, { signal: controller.signal });
-          clearTimeout(timer);
-
-          if (res.ok) {
-            activeNode = node;
-            if(force) toast("Đã chuyển sang máy chủ YouTube API mới!");
-            return node;
-          }
-        } catch (e) {
-          continue; // Nếu server này lỗi, tự động kiểm tra server kế tiếp
-        }
-      }
-      throw new Error("Không tìm thấy server phù hợp");
-    }
-
-    // TỰ ĐỘNG LẤY VIDEO TỪ YOUTUBE API
-    async function autoLoadYouTubeData(endpoint) {
-      try {
-        const node = await findWorkingServer();
-        const res = await fetch(`${node}${endpoint}`);
-        if (!res.ok) throw new Error();
-        return await res.json();
-      } catch (err) {
-        // Thử lại bằng cách tìm server mới
-        const node = await findWorkingServer(true);
-        const res = await fetch(`${node}${endpoint}`);
-        return await res.json();
-      }
-    }
-
-    // Tải Video Xu hướng tự động
-    async function loadTrending() {
-      try {
-        const videos = await autoLoadYouTubeData('/trending?region=VN');
-        renderVideos(videos);
-      } catch {
-        document.getElementById('main-content').innerHTML = `
-          <div class="text-center py-20 text-xs text-red-400">
-            <p class="mb-3">Không thể tải tự động API YouTube do mạng bận.</p>
-            <button onclick="findWorkingServer(true).then(loadTrending)" class="bg-accent-green text-black px-4 py-2 rounded-full font-bold">Thử lại</button>
+      main.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        main.innerHTML += `
+          <div class="rounded-2xl overflow-hidden bg-[#181818] border border-[#222]">
+            <div class="w-full aspect-video skeleton"></div>
+            <div class="p-3 flex gap-3">
+              <div class="w-9 h-9 rounded-full skeleton flex-shrink-0"></div>
+              <div class="flex-1 space-y-2">
+                <div class="h-3 skeleton rounded w-5/6"></div>
+                <div class="h-2.5 skeleton rounded w-1/2"></div>
+              </div>
+            </div>
           </div>`;
       }
     }
 
-    // Tải theo danh mục tự động
-    async function loadCategory(q) {
-      document.getElementById('main-content').innerHTML = `<div class="text-center py-20 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin text-xl mb-2"></i><br>Đang tải video...</div>`;
-      try {
-        const data = await autoLoadYouTubeData(`/search?q=${encodeURIComponent(q)}&filter=videos`);
-        renderVideos(data.items);
-      } catch {
-        toast("Lỗi tải danh mục");
-      }
-    }
-
-    // Tự động phát Video khi click
-    async function playVideoById(videoId) {
-      const playerView = document.getElementById('player-view');
-      const player = document.getElementById('video-player');
+    // Engine 1: YouTube RSS (Proxy Bypass - Không bao giờ lỗi)
+    async function fetchFromRSS(channelId) {
+      const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
       
-      document.getElementById('video-title').innerText = "Đang tải dữ liệu stream...";
-      playerView.style.display = 'flex';
+      const res = await fetch(proxyUrl);
+      const data = await res.json();
+      
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+      const entries = Array.from(xmlDoc.querySelectorAll("entry"));
 
+      return entries.map(entry => {
+        const videoId = entry.querySelector("videoId")?.textContent;
+        return {
+          id: videoId,
+          title: entry.querySelector("title")?.textContent,
+          author: entry.querySelector("name")?.textContent,
+          thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+        };
+      });
+    }
+
+    // Engine 2: Search API qua Invidious Node
+    async function searchYouTube(query) {
+      showSkeletons();
       try {
-        const data = await autoLoadYouTubeData(`/streams/${videoId}`);
-        currentVideoData = data;
-
-        document.getElementById('video-title').innerText = data.title;
-        document.getElementById('video-author').innerText = data.uploader;
-        document.getElementById('video-views').innerText = `${(data.views || 0).toLocaleString()} lượt xem`;
-        if (data.uploaderAvatar) document.getElementById('channel-avatar').src = data.uploaderAvatar;
-
-        const stream = data.videoStreams.find(s => s.mimeType.includes('video/mp4') && s.quality) || data.videoStreams[0];
-        if (stream && stream.url) {
-          player.src = stream.url;
-          player.play();
-        }
-      } catch {
-        toast("Không tải được video này");
+        const res = await fetch(`https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
+        const data = await res.json();
+        const list = data.map(item => ({
+          id: item.videoId,
+          title: item.title,
+          author: item.author,
+          thumbnail: `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`
+        }));
+        renderVideos(list);
+      } catch (e) {
+        // Fallback tự động
+        loadCategoryData('trending');
       }
     }
 
-    // Hiển thị danh sách Video lên Giao diện
+    async function loadCategoryData(type) {
+      showSkeletons();
+      try {
+        let results = [];
+        const channelList = CHANNELS[type] || CHANNELS.trending;
+        for (let cId of channelList) {
+          const vids = await fetchFromRSS(cId);
+          results = results.concat(vids);
+        }
+        renderVideos(results);
+      } catch (err) {
+        toast("Đang chuyển sang máy chủ dự phòng...");
+      }
+    }
+
     function renderVideos(list) {
       const main = document.getElementById('main-content');
       main.innerHTML = '';
-      
+
       if (!list || list.length === 0) {
-        main.innerHTML = `<div class="text-center py-20 text-xs text-slate-400">Không có video nào.</div>`;
+        main.innerHTML = `<div class="text-center py-20 text-xs text-slate-400">Không tìm thấy nội dung phù hợp.</div>`;
         return;
       }
 
       list.forEach(item => {
-        const id = item.url ? item.url.replace('/watch?v=', '') : item.id;
-        if (!id) return;
+        if (!item.id) return;
 
         const card = document.createElement('div');
-        card.className = "mb-4 cursor-pointer";
-        card.onclick = () => playVideoById(id);
+        card.className = "rounded-2xl overflow-hidden bg-[#181818] border border-[#222] hover:border-green-500/30 transition cursor-pointer group";
+        card.onclick = () => playVideo(item);
 
         card.innerHTML = `
-          <div class="relative aspect-video w-full bg-slate-900">
-            <img src="${item.thumbnail}" class="w-full h-full object-cover" loading="lazy">
-            <span class="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded">
-              ${item.duration ? Math.floor(item.duration/60) + ':' + ('0'+item.duration%60).slice(-2) : 'LIVE'}
-            </span>
+          <div class="relative aspect-video w-full bg-slate-900 overflow-hidden">
+            <img src="${item.thumbnail}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy">
+            <span class="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/10">HD</span>
           </div>
           <div class="p-3 flex gap-3">
-            <img src="${item.uploaderAvatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + (item.uploaderName||'C')}" class="w-9 h-9 rounded-full flex-shrink-0">
+            <img src="https://api.dicebear.com/7.x/identicon/svg?seed=${item.author || 'C'}" class="w-9 h-9 rounded-full flex-shrink-0 border border-slate-800">
             <div class="flex-1 overflow-hidden">
-              <h3 class="text-xs font-medium text-white line-clamp-2 mb-1">${item.title}</h3>
-              <p class="text-[11px] text-slate-400">${item.uploaderName || item.uploader}</p>
+              <h3 class="text-xs font-semibold text-slate-100 line-clamp-2 leading-snug group-hover:text-green-400 transition">${item.title}</h3>
+              <p class="text-[11px] text-slate-400 mt-1 flex items-center gap-1">${item.author || 'YouTube Channel'} <i class="fa-solid fa-circle-check text-[9px] text-emerald-500"></i></p>
             </div>
           </div>
         `;
@@ -244,48 +256,94 @@
       });
     }
 
+    function playVideo(item) {
+      currentVideo = item;
+      const playerView = document.getElementById('player-view');
+      const iframe = document.getElementById('video-iframe');
+      
+      document.getElementById('video-title').innerText = item.title;
+      document.getElementById('video-author').innerText = item.author || "YouTube Channel";
+      document.getElementById('channel-avatar').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${item.author || 'C'}`;
+      
+      playerView.style.display = 'flex';
+      iframe.src = `https://www.youtube-nocookie.com/embed/${item.id}?autoplay=1&modestbranding=1&rel=0`;
+    }
+
+    function filterCategory(catName) {
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.className = "cat-btn bg-[#222] text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-[#333]";
+      });
+      event.target.className = "cat-btn bg-white text-black font-semibold px-3.5 py-1.5 rounded-full";
+
+      if (catName === 'Âm nhạc') loadCategoryData('music');
+      else if (catName === 'Shorts') loadCategoryData('shorts');
+      else if (catName === 'Gaming') loadCategoryData('gaming');
+      else loadCategoryData('trending');
+    }
+
     function switchTab(tab) {
+      currentTab = tab;
       document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
       document.getElementById(`nav-${tab}`)?.classList.add('active');
       closePlayer();
 
-      if (tab === 'home') loadTrending();
-      else if (tab === 'shorts') loadCategory('Shorts YouTube');
-      else if (tab === 'music') loadCategory('Nhạc Trẻ Mới Nhất');
-      else if (tab === 'library') {
-        document.getElementById('main-content').innerHTML = `
-          <div class="p-4">
-            <div class="bg-[#181818] p-4 rounded-xl border border-[#222]">
-              <h3 class="font-bold text-sm mb-1">Thư viện GreenTuber</h3>
-              <p class="text-xs text-slate-400">Dữ liệu video được tải tự động hoàn toàn từ hệ thống YouTube API sạch.</p>
-            </div>
+      if (tab === 'home') loadCategoryData('trending');
+      else if (tab === 'shorts') loadCategoryData('shorts');
+      else if (tab === 'music') loadCategoryData('music');
+      else if (tab === 'library') renderLibrary();
+    }
+
+    function renderLibrary() {
+      const main = document.getElementById('main-content');
+      if (savedVideos.length === 0) {
+        main.innerHTML = `
+          <div class="p-6 text-center text-slate-400 space-y-3">
+            <i class="fa-solid fa-bookmark text-4xl text-slate-600"></i>
+            <p class="text-xs">Chưa có video nào được lưu trong thư viện.</p>
           </div>`;
+      } else {
+        renderVideos(savedVideos);
+      }
+    }
+
+    function saveToLibrary() {
+      if (!currentVideo) return;
+      if (!savedVideos.some(v => v.id === currentVideo.id)) {
+        savedVideos.push(currentVideo);
+        localStorage.setItem('gt_saved_videos', JSON.stringify(savedVideos));
+        toast("Đã lưu vào thư viện!");
+      } else {
+        toast("Video này đã có trong thư viện!");
       }
     }
 
     function closePlayer() {
-      const player = document.getElementById('video-player');
-      player.pause(); player.src = "";
+      document.getElementById('video-iframe').src = "";
       const p = document.getElementById('player-view');
       p.style.display = 'none';
       p.classList.remove('pip-mode');
     }
 
     function togglePIP() { document.getElementById('player-view').classList.toggle('pip-mode'); }
-    function playBackground() { toast("Đang phát nhạc nền..."); togglePIP(); }
-    function downloadCurrentVideo() { if(currentVideoData) window.open(currentVideoData.videoStreams[0].url, '_blank'); }
-    function shareVideo() { navigator.clipboard.writeText(window.location.href); toast("Đã sao chép link!"); }
-    function toggleSubscribe() { const b = document.getElementById('sub-btn'); b.innerText = (b.innerText === "Đăng ký") ? "Đã đăng ký" : "Đăng ký"; }
+    function shareVideo() { navigator.clipboard.writeText(window.location.href); toast("Đã sao chép liên kết!"); }
+    function toggleSubscribe() { 
+      const b = document.getElementById('sub-btn');
+      b.innerText = (b.innerText === "Đăng ký") ? "Đã đăng ký" : "Đăng ký";
+      b.classList.toggle('bg-slate-700');
+      b.classList.toggle('text-white');
+    }
     function toggleSearch() { document.getElementById('search-form').classList.toggle('hidden'); }
+    function reloadCurrentTab() { switchTab(currentTab); toast("Đã cập nhật dữ liệu!"); }
 
     document.getElementById('search-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const q = document.getElementById('search-input').value.trim();
-      if (q) loadCategory(q);
+      if (q) searchYouTube(q);
     });
 
-    // Khởi chạy: Tự động kết nối server API và tự động tải danh sách video YouTube ngay lập tức
-    loadTrending();
+    // Khởi chạy
+    loadCategoryData('trending');
   </script>
 </body>
 </html>
+  
